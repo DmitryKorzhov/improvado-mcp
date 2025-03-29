@@ -1,23 +1,29 @@
 import app from "./app";
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
+import { Env, Props } from "./types";
+import { executeQuerySchema, executeQueryHandler } from "./tools";
 
-export class MyMCP extends McpAgent {
+export class MyMCP extends McpAgent<Props, Env> {
 	server = new McpServer({
-		name: "Demo",
+		name: "Improvado MCP",
 		version: "1.0.0",
 	});
 
 	async init() {
-		this.server.tool("add", { a: z.number(), b: z.number() }, async ({ a, b }) => ({
-			content: [{ type: "text", text: String(a + b) }],
-		}));
+		this.server.tool(
+			"executeQuery",
+			"Execute SQL query on Improvado data via GPT interface",
+			executeQuerySchema,
+			async (args, extra) => {
+				const apiKey = this.props?.improvadoApiKey;
+				return executeQueryHandler(args, extra, apiKey as string);
+			}
+		);
 	}
 }
 
-// Export the OAuth handler as the default
 export default new OAuthProvider({
 	apiRoute: "/sse",
 	// TODO: fix these types

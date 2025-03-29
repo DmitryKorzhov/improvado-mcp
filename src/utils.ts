@@ -5,10 +5,6 @@ import { marked } from "marked";
 import type { AuthRequest } from "@cloudflare/workers-oauth-provider";
 import { env } from "cloudflare:workers";
 
-// This file mainly exists as a dumping ground for uninteresting html and CSS
-// to remove clutter and noise from the auth logic. You likely do not need
-// anything from this file.
-
 export const layout = (content: HtmlEscapedString | string, title: string) => html`
 	<!DOCTYPE html>
 	<html lang="en">
@@ -193,12 +189,12 @@ export const renderLoggedInAuthorizeScreen = async (
 	return html`
 		<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
 			<h1 class="text-2xl font-heading font-bold mb-6 text-gray-900">
-				Authorization Request
+				Improvado MCP Authorization
 			</h1>
 
 			<div class="mb-8">
 				<h2 class="text-lg font-semibold mb-3 text-gray-800">
-					MCP Remote Auth Demo would like permission to:
+					Improvado MCP would like permission to:
 				</h2>
 				<ul class="space-y-2">
 					${oauthScopes.map(
@@ -225,7 +221,21 @@ export const renderLoggedInAuthorizeScreen = async (
 					name="oauthReqInfo"
 					value="${JSON.stringify(oauthReqInfo)}"
 				/>
-				<input type="hidden" name="email" value="user@example.com" />
+				<div>
+					<label
+						for="improvadoApiKey"
+						class="block text-sm font-medium text-gray-700 mb-1"
+						>Improvado API Key</label
+					>
+					<input
+						type="password"
+						id="improvadoApiKey"
+						name="improvadoApiKey"
+						required
+						class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+						placeholder="Enter your Improvado API key"
+					/>
+				</div>
 				<button
 					type="submit"
 					name="action"
@@ -254,12 +264,12 @@ export const renderLoggedOutAuthorizeScreen = async (
 	return html`
 		<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
 			<h1 class="text-2xl font-heading font-bold mb-6 text-gray-900">
-				Authorization Request
+				Improvado MCP Authorization
 			</h1>
 
 			<div class="mb-8">
 				<h2 class="text-lg font-semibold mb-3 text-gray-800">
-					MCP Remote Auth Demo would like permission to:
+					Improvado MCP would like permission to:
 				</h2>
 				<ul class="space-y-2">
 					${oauthScopes.map(
@@ -286,35 +296,20 @@ export const renderLoggedOutAuthorizeScreen = async (
 					name="oauthReqInfo"
 					value="${JSON.stringify(oauthReqInfo)}"
 				/>
-				<div class="space-y-4">
-					<div>
-						<label
-							for="email"
-							class="block text-sm font-medium text-gray-700 mb-1"
-							>Email</label
-						>
-						<input
-							type="email"
-							id="email"
-							name="email"
-							required
-							class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-						/>
-					</div>
-					<div>
-						<label
-							for="password"
-							class="block text-sm font-medium text-gray-700 mb-1"
-							>Password</label
-						>
-						<input
-							type="password"
-							id="password"
-							name="password"
-							required
-							class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-						/>
-					</div>
+				<div>
+					<label
+						for="improvadoApiKey"
+						class="block text-sm font-medium text-gray-700 mb-1"
+						>Improvado API Key</label
+					>
+					<input
+						type="password"
+						id="improvadoApiKey"
+						name="improvadoApiKey"
+						required
+						class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+						placeholder="Enter your Improvado API key"
+					/>
 				</div>
 				<button
 					type="submit"
@@ -322,7 +317,7 @@ export const renderLoggedOutAuthorizeScreen = async (
 					value="login_approve"
 					class="w-full py-3 px-4 bg-primary text-white rounded-md font-medium hover:bg-primary/90 transition-colors"
 				>
-					Log in and Approve
+					Submit and Approve
 				</button>
 				<button
 					type="submit"
@@ -392,8 +387,7 @@ export const parseApproveFormBody = async (body: {
 	[x: string]: string | File;
 }) => {
 	const action = body.action as string;
-	const email = body.email as string;
-	const password = body.password as string;
+	const improvadoApiKey = body.improvadoApiKey as string;
 	let oauthReqInfo: AuthRequest | null = null;
 	try {
 		oauthReqInfo = JSON.parse(body.oauthReqInfo as string) as AuthRequest;
@@ -401,5 +395,5 @@ export const parseApproveFormBody = async (body: {
 		oauthReqInfo = null;
 	}
 
-	return { action, oauthReqInfo, email, password };
+	return { action, oauthReqInfo, improvadoApiKey };
 };
