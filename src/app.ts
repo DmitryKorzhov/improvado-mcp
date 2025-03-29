@@ -7,6 +7,7 @@ import {
 	renderAuthorizationApprovedContent,
 	renderLoggedInAuthorizeScreen,
 	renderLoggedOutAuthorizeScreen,
+	validateImprovadoApiKey
 } from "./utils";
 import type { OAuthHelpers } from "@cloudflare/workers-oauth-provider";
 import { Env } from "./types";
@@ -25,8 +26,6 @@ app.get("/", async (c) => {
 });
 
 app.get("/authorize", async (c) => {
-	const isLoggedIn = true;
-
 	const oauthReqInfo = await c.env.OAUTH_PROVIDER.parseAuthRequest(c.req.raw);
 
 	const oauthScopes = [
@@ -35,11 +34,6 @@ app.get("/authorize", async (c) => {
 			description: "Access your Improvado data using your API key",
 		},
 	];
-
-	if (isLoggedIn) {
-		const content = await renderLoggedInAuthorizeScreen(oauthScopes, oauthReqInfo);
-		return c.html(layout(content, "Improvado MCP - Authorization"));
-	}
 
 	const content = await renderLoggedOutAuthorizeScreen(oauthScopes, oauthReqInfo);
 	return c.html(layout(content, "Improvado MCP - Authorization"));
@@ -63,9 +57,27 @@ app.post("/approve", async (c) => {
 		);
 	}
 
+	if (improvadoApiKey) {
+		const isValidKey = await validateImprovadoApiKey(improvadoApiKey);
+		if (!isValidKey) {
+			const oauthScopes = [
+				{
+					name: "improvado_api",
+					description: "Access your Improvado data using your API key",
+				},
+			];
+			const content = await renderLoggedOutAuthorizeScreen(
+				oauthScopes, 
+				oauthReqInfo, 
+				"Invalid API key. Please try again with a valid API key."
+			);
+			return c.html(layout(content, "Improvado MCP - Authorization"));
+		}
+	}
+
 	const { redirectTo } = await c.env.OAUTH_PROVIDER.completeAuthorization({
 		request: oauthReqInfo,
-		userId: "improvado_user",
+		userId: `improvado_user_${Date.now()}`,
 		metadata: {
 			label: "Improvado User",
 		},

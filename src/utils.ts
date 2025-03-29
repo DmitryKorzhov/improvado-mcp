@@ -260,12 +260,19 @@ export const renderLoggedInAuthorizeScreen = async (
 export const renderLoggedOutAuthorizeScreen = async (
 	oauthScopes: { name: string; description: string }[],
 	oauthReqInfo: AuthRequest,
+	errorMessage?: string
 ) => {
 	return html`
 		<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
 			<h1 class="text-2xl font-heading font-bold mb-6 text-gray-900">
 				Improvado MCP Authorization
 			</h1>
+
+			${errorMessage ? html`
+				<div class="mb-4 p-4 bg-red-100 text-red-800 rounded-md">
+					${errorMessage}
+				</div>
+			` : ''}
 
 			<div class="mb-8">
 				<h2 class="text-lg font-semibold mb-3 text-gray-800">
@@ -314,7 +321,7 @@ export const renderLoggedOutAuthorizeScreen = async (
 				<button
 					type="submit"
 					name="action"
-					value="login_approve"
+					value="approve"
 					class="w-full py-3 px-4 bg-primary text-white rounded-md font-medium hover:bg-primary/90 transition-colors"
 				>
 					Submit and Approve
@@ -397,3 +404,36 @@ export const parseApproveFormBody = async (body: {
 
 	return { action, oauthReqInfo, improvadoApiKey };
 };
+
+// Функция для проверки валидности API-ключа с помощью простого запроса
+export async function validateImprovadoApiKey(apiKey: string): Promise<boolean> {
+	if (!apiKey) return false;
+	
+	try {
+		const response = await fetch('https://improvado.fyi/api/gpt/query', {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${apiKey}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				query: "SELECT 1",
+				params: []
+			})
+		});
+		
+		if (!response.ok) {
+			return false;
+		}
+		
+		try {
+			const result = await response.json() as { success: boolean; data: any; error?: string };
+			return result.success === true;
+		} catch (parseError) {
+			return false;
+		}
+	} catch (error) {
+		console.error("Error validating API key:", error);
+		return false;
+	}
+}
