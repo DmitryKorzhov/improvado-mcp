@@ -10,7 +10,7 @@ import {
 	validateImprovadoApiKey
 } from "./utils";
 import type { OAuthHelpers } from "@cloudflare/workers-oauth-provider";
-import { Env } from "./types";
+import { Env } from "./global-types";
 
 export type Bindings = Env & {
 	OAUTH_PROVIDER: OAuthHelpers;

@@ -1,18 +1,9 @@
-import { z } from "zod";
-import { QueryResponse } from "../types";
-
-export const executeQuerySchema = {
-    query: z.string().describe("SQL query to execute"),
-    params: z.array(z.any()).optional().describe("Parameters to substitute in the query (optional)")
-};
+import { QueryResponse, QueryRequest, executeQuerySchema } from "./types";
 
 export const executeQueryHandler = async ({ 
     query, 
     params = [] 
-}: { 
-    query: string; 
-    params?: any[] 
-}, 
+}: QueryRequest, 
 extra: any,
 apiKey: string | undefined
 ) => {
@@ -74,4 +65,6 @@ apiKey: string | undefined
             }],
         };
     }
-}; 
+};
+
+export { executeQuerySchema }; 
